@@ -1,4 +1,5 @@
 use core::fmt;
+mod parser;
 use std::collections::HashMap;
 use std::io::stdin;
 use std::io::stdout;
@@ -49,7 +50,33 @@ enum TokenType {
     NOT_EQ,
 }
 
-#[derive(Debug)]
+/*
+    const (
+        _ int = iota
+        LOWEST
+        EQUALS // ==
+        LESSGREATER // > or <
+        SUM // +
+        PRODUCT // *
+        PREFIX // -X or !X
+        CALL // myFunction(X)
+)
+ */
+
+impl TokenType {
+    fn precedence(&self) -> i32 {
+        match *self {
+            TokenType::EQ | TokenType::NOT_EQ => 1,
+            TokenType::LT | TokenType::GT => 2,
+            TokenType::PLUS | TokenType::MINUS => 3,
+            TokenType::SLASH | TokenType::ASTERISK => 4,
+            // TODO: add others?
+            _ => 0,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 struct Token {
     token_type: TokenType,
     literal: String,
@@ -83,10 +110,11 @@ impl Lexer {
     fn make_two_character_token(&mut self, token_type: TokenType) -> Token {
         let first_char = self.current_char;
         self.read_char();
+        let second_char = self.current_char;
         self.read_char();
         return Token {
             token_type,
-            literal: String::from(first_char) + &String::from(self.current_char.clone()),
+            literal: String::from(first_char) + &String::from(second_char),
         };
     }
 
